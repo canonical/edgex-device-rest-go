@@ -92,24 +92,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	cli := hooks.NewSnapCtl()
 	svc := fmt.Sprintf("%s.device-rest-go", hooks.SnapInst)
 
+	// If autostart is not explicitly set, default to "no"
+	// as only example service configuration and profiles
+	// are provided by default.
 	autostart, err := cli.Config(hooks.AutostartConfig)
 	if err != nil {
 		hooks.Error(fmt.Sprintf("Reading config 'autostart' failed: %v", err))
 		os.Exit(1)
 	}
-
-	// TODO: move profile config before autostart, if profile=default, or
-	// no configuration file exists for the profile, then ignore autostart
+	if autostart == "" {
+		hooks.Debug("edgex-device-rest autostart is NOT set, initializing to 'no'")
+		autostart = "no"
+	}
 
 	switch strings.ToLower(autostart) {
 	case "true":
+		hooks.Debug("edgex-device-rest autostart is 'true'")
 	case "yes":
-		break
-	case "":
+		hooks.Debug("edgex-device-rest autostart is 'yes'")
+	case "false":
+		hooks.Debug("edgex-device-rest autostart is 'false'")
+		fallthrough
 	case "no":
+		hooks.Debug("edgex-device-rest autostart is 'no'")
 		// disable this service initially because it requires configuration
 		// with a device profile that will be specific to each installation
 		err = cli.Stop(svc, true)
