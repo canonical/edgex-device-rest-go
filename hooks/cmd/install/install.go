@@ -29,15 +29,23 @@ import (
 
 var cli *hooks.CtlCli = hooks.NewSnapCtl()
 
-// installProfiles copies the profile configuration.toml files from $SNAP to $SNAP_DATA.
-func installConfig() error {
+func installConfigAndProfiles() error {
 	var err error
 
 	path := "/config/device-rest-go/res/configuration.toml"
 	destFile := hooks.SnapData + path
 	srcFile := hooks.Snap + path
+	dir := filepath.Dir(destFile)
 
-	if err = os.MkdirAll(filepath.Dir(destFile), 0755); err != nil {
+	// if configuration.toml already exists, it's been
+	// provided by a content interface, so no need to
+	// make the directory, which would cause any files
+	// provided by the content interface to be deleted.
+	if _, err = os.Stat(destFile); err == nil {
+		return nil
+	}
+
+	if err = os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
@@ -45,23 +53,11 @@ func installConfig() error {
 		return err
 	}
 
-	return nil
-}
-
-// TODO: merge into the above function...
-func installDevProfiles() error {
-	var err error
-
 	profs := [...]string{"image", "numeric", "json"}
-
 	for _, v := range profs {
 		path := fmt.Sprintf("/config/device-rest-go/res/sample-%s-device.yaml", v)
 		destFile := hooks.SnapData + path
 		srcFile := hooks.Snap + path
-
-		if err := os.MkdirAll(filepath.Dir(destFile), 0755); err != nil {
-			return err
-		}
 
 		if err = hooks.CopyFile(srcFile, destFile); err != nil {
 			return err
@@ -90,13 +86,7 @@ func main() {
 
 	}
 
-	err = installConfig()
-	if err != nil {
-		hooks.Error(fmt.Sprintf("edgex-device-rest:install: %v", err))
-		os.Exit(1)
-	}
-
-	err = installDevProfiles()
+	err = installConfigAndProfiles()
 	if err != nil {
 		hooks.Error(fmt.Sprintf("edgex-device-rest:install: %v", err))
 		os.Exit(1)
