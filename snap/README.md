@@ -65,6 +65,13 @@ $ sudo snap start edgex-device-rest.device-rest-go
 ```
 **Note** - content interfaces from snaps installed from the Snap Store that have the same publisher connect automatically. For more information on snap content interfaces please refer to the snapcraft.io [Content Interface](https://snapcraft.io/docs/content-interface) documentation.
 
+### Autostart
+By default, the edgex-device-rest snap disables its service on install, as the expectation is that the default profile configuration files will be customized, and thus this behavior allows the profile ```configuration.toml``` files in $SNAP_DATA to be modified before the service is first started.
+
+This behavior can be overridden by setting the ```autostart``` configuration setting to "true". This is useful when configuration and/or device profiles are being provided via configuration or gadget snap content interface.
+
+**Note** - this option is typically set from a gadget snap.
+
 ### Rich Configuration
 While it's possible on Ubuntu Core to provide additional profiles via gadget
 snap content interface, quite often only minor changes to existing profiles are required.
